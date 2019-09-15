@@ -1,8 +1,8 @@
+use std::fs::read_dir;
 use std::path::PathBuf;
-use std::fs::{read_dir};
 use structopt::StructOpt;
 
-#[derive(StructOpt,Debug)]
+#[derive(StructOpt, Debug)]
 struct Opt {
     #[structopt(parse(from_str))]
     source_path: PathBuf,
@@ -37,7 +37,7 @@ fn main() {
     // go to source directory
     // if there's both a .git and a .gitignore, do a git cleanup
     // copy all the files
-    // now any undesirable directories are gone, so every remaining directory can be processed the same way 
+    // now any undesirable directories are gone, so every remaining directory can be processed the same way
     // enqueue all the child directories
     // pop the next thing off the queue
     // create the path
