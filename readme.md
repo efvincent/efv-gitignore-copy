@@ -1,4 +1,4 @@
-#gitignore-copy
+# gitignore-copy
 
 You know when you want to copy an entire subfolder of code from one computer
 to another, say when you've got a new computer and you're retiring your old one?
