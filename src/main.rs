@@ -1,8 +1,13 @@
 use std::path::PathBuf;
 use std::fs::{read_dir};
+use structopt::StructOpt;
 
-fn get_top_dir() -> PathBuf {
-    PathBuf::from(".")
+#[derive(StructOpt,Debug)]
+struct Opt {
+    #[structopt(parse(from_str))]
+    source_path: PathBuf,
+    #[structopt(parse(from_str))]
+    target_path: Option<PathBuf>,
 }
 
 fn my_dir(path: &PathBuf) -> Result<(), std::io::Error> {
@@ -10,9 +15,9 @@ fn my_dir(path: &PathBuf) -> Result<(), std::io::Error> {
         if let Ok(entry) = entry {
             let md = entry.metadata()?;
             if md.is_dir() {
-                println!("{:?} <dir>", entry.file_name());
+                println!("{:20} {:>7}", entry.file_name().to_string_lossy(), "DIR");
             } else {
-                println!("{:?} {}", entry.file_name(), md.len());
+                println!("{:20} {:>7}", entry.file_name().to_string_lossy(), md.len());
             }
         }
     }
@@ -20,15 +25,15 @@ fn my_dir(path: &PathBuf) -> Result<(), std::io::Error> {
 }
 
 fn main() {
-    match my_dir(&get_top_dir()) {
+    let opt = Opt::from_args();
+    println!("{:?}", opt);
+    match my_dir(&opt.source_path) {
         Ok(()) => (),
         Err(err) => {
             println!("Error: {:?}", err);
         }
     }
 
-    // parse arguments
-    //  source directory / target directory
     // go to source directory
     // if there's both a .git and a .gitignore, do a git cleanup
     // copy all the files
