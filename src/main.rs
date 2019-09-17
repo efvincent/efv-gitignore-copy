@@ -10,48 +10,47 @@ struct Opt {
     target_path: Option<PathBuf>,
 }
 
+/// Iterate a directory that has gitignore information (even if that came)
+/// from a parent).
 fn iter_gi_dir(path: &PathBuf, gi: &gitignore::File) -> Result<(), std::io::Error> {
     for de in read_dir(path)? {
         if let Ok(entry) = de {
             let filename = entry.path(); 
-            if gi.is_excluded(&filename).unwrap() {
+            if gi.is_excluded(&filename).unwrap() || filename.ends_with(".git") {
                 println!("{:?} is excluded", filename);
             } else {
                 let md = entry.metadata()?;
                 if md.is_dir() {
                     println!("{:20} {:>7}", entry.file_name().to_string_lossy(),  "DIR");
-                    my_dir(&entry.path(), Some(gi))?;
-                }  
+                    gi_iterate(&entry.path(), Some(gi))?;
+                } else {
+                    println!("{:20} {:>7}", entry.file_name().to_string_lossy(), md.len());
+                }
+
             }
         };
     }
     Ok(())
 }
-    
-    // for entry in read_dir(path)? {
-    //     if let Ok(entry) = entry {
-    //         let md = entry.metadata()?;
-    //         if md.is_dir() {
-    //             println!("{:20} {:>7}", entry.file_name().to_string_lossy(), "DIR");
-    //         } else {
-    //             println!("{:20} {:>7}", entry.file_name().to_string_lossy(), md.len());
-    //         }
-    //     }
-    // }
+
+/// Iterate a directory that has no gitignore information
 fn iter_no_gi_dir(path: &PathBuf) -> Result<(), std::io::Error> {
     for de in read_dir(path)? {
         if let Ok(entry) = de {
             let md = entry.metadata()?;
             if md.is_dir() {
                 println!("{:20} {:>7}", entry.file_name().to_string_lossy(),  "DIR");
-                my_dir(&entry.path(), None)?;
-            }  
+                gi_iterate(&entry.path(), None)?;
+            } else {
+                println!("{:20} {:>7}", entry.file_name().to_string_lossy(), md.len());
+            }
         };
     }
     Ok(())
 }
 
-fn my_dir(path: &PathBuf, parent_gi: Option<&gitignore::File>) -> Result<(), std::io::Error> {
+/// Iterate a directory tree, searching for and applying `.gitignore` rules
+fn gi_iterate(path: &PathBuf, parent_gi: Option<&gitignore::File>) -> Result<(), std::io::Error> {
     // check if the directory has a .gitignore in it
     let gi_path = path.join(".gitignore");
     if gi_path.exists() {
@@ -69,25 +68,15 @@ fn my_dir(path: &PathBuf, parent_gi: Option<&gitignore::File>) -> Result<(), std
         }
     }
     Ok(())
-
 }
 
 fn main() {
     let opt = Opt::from_args();
     println!("{:?}", opt);
-    match my_dir(&opt.source_path, None) {
+    match gi_iterate(&opt.source_path, None) {
         Ok(()) => (),
         Err(err) => {
             println!("Error: {:?}", err);
         }
     }
-
-    // go to source directory
-    // if there's both a .git and a .gitignore, do a git cleanup
-    // copy all the files
-    // now any undesirable directories are gone, so every remaining directory can be processed the same way
-    // enqueue all the child directories
-    // pop the next thing off the queue
-    // create the path
-    // repeat
 }
