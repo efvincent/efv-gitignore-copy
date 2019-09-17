@@ -1,6 +1,6 @@
 [package]
-name = "special-copy"
-version = "0.1.0"
+name = "gitignore-copy"
+version = "0.1.3"
 authors = ["Eric Vincent <eric@efvincent.com>"]
 edition = "2018"
 
