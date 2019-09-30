@@ -18,13 +18,12 @@ fn iter_gi_dir(path: &PathBuf, gi: &gitignore::File) -> Result<(), std::io::Erro
         if let Ok(entry) = de {
             let filename = entry.path(); 
             if gi.is_excluded(&filename).unwrap() || filename.ends_with(".git") {
-                println!("{:30} {}", style(filename.to_string_lossy()).red(), style("excluded").dim());
+                println!("{:30} {:>7}", style(filename.to_string_lossy()).red(), style("excluded").dim());
             } else {
                 let md = entry.metadata()?;
                 let filename = entry.file_name();
                 let fns = &filename.to_string_lossy();
                 if md.is_dir() {
-                    println!("{:30} {:>7}", style(fns).blue().bold(),  "DIR");
                     gi_iterate(&entry.path(), Some(gi))?;
                 } else {
                     println!("{:30} {:>7}", style(fns).blue(), md.len());
@@ -46,7 +45,6 @@ fn iter_no_gi_dir(path: &PathBuf) -> Result<(), std::io::Error> {
             let filename = entry.file_name();
             let fns = &filename.to_string_lossy();
             if md.is_dir() {
-                println!("{:30} {:>7}", style(fns).green(),  style("DIR").blue());
                 gi_iterate(&entry.path(), None)?;
             } else {
                 println!("{:30} {:>7}", style(fns).yellow(), md.len());
@@ -60,17 +58,18 @@ fn iter_no_gi_dir(path: &PathBuf) -> Result<(), std::io::Error> {
 fn gi_iterate(path: &PathBuf, parent_gi: Option<&gitignore::File>) -> Result<(), std::io::Error> {
     // check if the directory has a .gitignore in it
     let gi_path = path.join(".gitignore");
+    let ps = &path.to_string_lossy();
     if gi_path.exists() {
         // Create the gitignore file object, use it to iterate directories and files
-        println!("{:?} contains a .gitignore file", path);
+        println!("{:30}{:>7}", style(ps).green(), style(".gitignore").dim()) ;
         let gi = gitignore::File::new(&gi_path).unwrap();
         iter_gi_dir(path, &gi)?;
     } else {
-        println!("{:?} has no .gitignore", path);
         if parent_gi.is_some() {
-            println!("anscestor has a .gitignore. Using for this directory.");
+            println!("{:30}{:>7}", style(ps).green(), style(".gitignore inherited").dim());
             iter_gi_dir(path, parent_gi.unwrap())?;
         } else {
+            println!("{:30}{:>7}", style(ps).magenta(), style("unfiltered").dim());
             iter_no_gi_dir(path)?;
         }
     }
